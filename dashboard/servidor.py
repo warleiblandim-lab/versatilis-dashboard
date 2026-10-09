@@ -41,8 +41,11 @@ FORCAR_MINIMO_SEGUNDOS = 15
 PERIODOS = {"hoje", "ontem", "7d", "14d", "30d", "mes"}
 FUSO = timezone(timedelta(hours=-3))  # America/Sao_Paulo (sem horário de verão)
 
-CONVERSA = "onsite_conversion.messaging_conversation_started_7d"
-LEAD = "lead"
+# Resultado principal e secundário (action_type da Meta) — mudam conforme o objetivo do cliente.
+RESULTADO = os.getenv("DASHBOARD_RESULTADO", "onsite_conversion.messaging_conversation_started_7d")
+RESULTADO_NOME = os.getenv("DASHBOARD_RESULTADO_NOME", "Conversas iniciadas")
+SECUNDARIO = os.getenv("DASHBOARD_SECUNDARIO", "lead")
+SECUNDARIO_NOME = os.getenv("DASHBOARD_SECUNDARIO_NOME", "Leads")
 CAMPOS = ["spend", "impressions", "reach", "inline_link_clicks", "actions"]
 CAMPOS_HORA = ["spend", "impressions", "inline_link_clicks", "actions"]
 DIAS_SEMANA = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
@@ -83,20 +86,20 @@ def resumo(linha):
     gasto = float(linha.get("spend", 0) or 0)
     impressoes = int(linha.get("impressions", 0) or 0)
     cliques = int(linha.get("inline_link_clicks", 0) or 0)
-    conversas = acao(linha, CONVERSA)
-    leads = acao(linha, LEAD)
+    resultados = acao(linha, RESULTADO)
+    secundarios = acao(linha, SECUNDARIO)
     return {
         "gasto": gasto,
         "impressoes": impressoes,
         "alcance": int(linha.get("reach", 0) or 0),
         "cliques": cliques,
-        "conversas": conversas,
-        "leads": leads,
+        "resultados": resultados,
+        "secundarios": secundarios,
         "ctr": cliques / impressoes * 100 if impressoes else None,
         "cpc": gasto / cliques if cliques else None,
         "cpm": gasto / impressoes * 1000 if impressoes else None,
-        "custo_conversa": gasto / conversas if conversas else None,
-        "custo_lead": gasto / leads if leads else None,
+        "custo_resultado": gasto / resultados if resultados else None,
+        "custo_secundario": gasto / secundarios if secundarios else None,
     }
 
 
@@ -192,6 +195,7 @@ def dados(periodo, forcar=False):
         granularidade, pontos = serie(inicio, fim)
         payload = {
             "conta": {"id": CONTA, "nome": _info_conta.get("name"), "moeda": _info_conta.get("currency")},
+            "metricas": {"resultado": RESULTADO_NOME, "secundario": SECUNDARIO_NOME},
             "periodo": {
                 "chave": periodo, "inicio": inicio.isoformat(), "fim": fim.isoformat(),
                 "anterior_inicio": inicio_ant.isoformat(), "anterior_fim": fim_ant.isoformat(),

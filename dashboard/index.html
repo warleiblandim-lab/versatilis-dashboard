@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Versatilis Meta Ads</title>
+<title>Dashboard Meta Ads</title>
 <style>
 :root {
   color-scheme: light;
@@ -135,7 +135,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 16px; }
 <div class="wrap">
   <header>
     <div>
-      <h1 id="titulo">Versatilis · Meta Ads</h1>
+      <h1 id="titulo">Meta Ads</h1>
       <div class="sub" id="subtitulo">Carregando…</div>
     </div>
     <div class="live">
@@ -177,7 +177,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 16px; }
       </div>
       <div class="card">
         <h2 id="g2-titulo">Conversas iniciadas por dia</h2>
-        <div class="nota">Conversas no WhatsApp/Direct iniciadas pelos anúncios</div>
+        <div class="nota" id="g2-nota">Resultado principal das campanhas</div>
         <div class="chart" id="g2"></div>
         <details><summary>Ver como tabela</summary><div class="tabela-wrap" id="g2-tabela"></div></details>
       </div>
@@ -226,10 +226,10 @@ document.getElementById("tema").onclick = () => {
 
 // ---------- KPIs ----------
 // bom: 1 = subir é bom, -1 = cair é bom, 0 = neutro
-const KPIS = [
-  { k: "conversas", label: "Conversas iniciadas", fmt: inteiro, bom: 1 },
-  { k: "custo_conversa", label: "Custo por conversa", fmt: moeda, bom: -1 },
-  { k: "leads", label: "Leads", fmt: inteiro, bom: 1 },
+const KPIS = m => [
+  { k: "resultados", label: m.resultado, fmt: inteiro, bom: 1 },
+  { k: "custo_resultado", label: "Custo por resultado", fmt: moeda, bom: -1 },
+  { k: "secundarios", label: m.secundario, fmt: inteiro, bom: 1 },
   { k: "alcance", label: "Alcance", fmt: v => (v == null ? "—" : numCurto.format(v)), bom: 1 },
   { k: "impressoes", label: "Impressões", fmt: v => numCurto.format(v), bom: 0 },
   { k: "cliques", label: "Cliques no link", fmt: inteiro, bom: 1 },
@@ -254,8 +254,8 @@ function renderKpis(d) {
   const heroDelta = document.getElementById("hero-delta");
   heroDelta.textContent = hd.txt; heroDelta.className = "delta";
   document.getElementById("hero-extra").textContent =
-    `${inteiro(t.conversas)} conversas · ${moeda(t.custo_conversa)} por conversa`;
-  document.getElementById("tiles").innerHTML = KPIS.map(kpi => {
+    `${d.metricas.resultado}: ${inteiro(t.resultados)} · ${moeda(t.custo_resultado)} cada`;
+  document.getElementById("tiles").innerHTML = KPIS(d.metricas).map(kpi => {
     const dl = delta(t[kpi.k], a[kpi.k], kpi.bom, cmp);
     return `<div class="card tile"><div class="label">${kpi.label}</div>
       <div class="valor">${kpi.fmt(t[kpi.k])}</div>
@@ -342,13 +342,15 @@ function renderGraficos(d) {
   const porHora = d.periodo.granularidade === "hora";
   const unidade = porHora ? "hora" : "dia";
   document.getElementById("g1-titulo").textContent = `Investimento por ${unidade}`;
-  document.getElementById("g2-titulo").textContent = `Conversas iniciadas por ${unidade}`;
+  const nomeRes = d.metricas.resultado;
+  document.getElementById("g2-titulo").textContent = `${nomeRes} por ${unidade}`;
+  document.getElementById("g2-nota").textContent = "Resultado principal das campanhas";
   const eixoMoeda = v => (v >= 1000 ? brlCurto.format(v) : "R$ " + num.format(v));
   colunas(document.getElementById("g1"), d.serie, "gasto", moeda, eixoMoeda, `Investimento por ${unidade}`);
-  colunas(document.getElementById("g2"), d.serie, "conversas", inteiro, v => num.format(v), `Conversas por ${unidade}`);
+  colunas(document.getElementById("g2"), d.serie, "resultados", inteiro, v => num.format(v), `${nomeRes} por ${unidade}`);
   const cab = porHora ? "Hora" : "Dia";
   document.getElementById("g1-tabela").innerHTML = tabelaSerie(d.serie, "gasto", moeda, cab);
-  document.getElementById("g2-tabela").innerHTML = tabelaSerie(d.serie, "conversas", inteiro, cab);
+  document.getElementById("g2-tabela").innerHTML = tabelaSerie(d.serie, "resultados", inteiro, cab);
 }
 
 // ---------- Tabela de campanhas ----------
@@ -365,16 +367,16 @@ function renderCampanhas(d) {
       <td><div class="nome">${esc(c.nome)}</div>
         <span class="status ${c.status === "ACTIVE" ? "ativa" : ""}"><i></i>${esc(STATUS[c.status] || c.status)}</span></td>
       <td>${moeda(c.gasto)}<div class="mini" aria-hidden="true"><b style="width:${(c.gasto / maxGasto * 100).toFixed(1)}%"></b></div></td>
-      <td>${inteiro(c.conversas)}</td>
-      <td>${moeda(c.custo_conversa)}</td>
-      <td>${inteiro(c.leads)}</td>
+      <td>${inteiro(c.resultados)}</td>
+      <td>${moeda(c.custo_resultado)}</td>
+      <td>${inteiro(c.secundarios)}</td>
       <td>${inteiro(c.impressoes)}</td>
       <td>${inteiro(c.cliques)}</td>
       <td>${pct(c.ctr)}</td>
       <td>${moeda(c.cpc)}</td>
     </tr>`).join("");
   document.getElementById("campanhas").innerHTML = `<table>
-    <thead><tr><th>Campanha</th><th>Investimento</th><th>Conversas</th><th>Custo/conversa</th><th>Leads</th>
+    <thead><tr><th>Campanha</th><th>Investimento</th><th>${esc(d.metricas.resultado)}</th><th>Custo/resultado</th><th>${esc(d.metricas.secundario)}</th>
     <th>Impressões</th><th>Cliques</th><th>CTR</th><th>CPC</th></tr></thead>
     <tbody>${linhas}</tbody></table>`;
 }
@@ -383,6 +385,7 @@ function renderCampanhas(d) {
 function render(d) {
   ultimo = d;
   document.getElementById("titulo").textContent = `${d.conta.nome || "Conta"} · Meta Ads`;
+  document.title = `${d.conta.nome || "Dashboard"} · Meta Ads`;
   const p = d.periodo;
   const faixa = p.inicio === p.fim ? dataBR(p.inicio) : `${dataBR(p.inicio)} a ${dataBR(p.fim)}`;
   document.getElementById("subtitulo").textContent = `${d.conta.id} · ${faixa}`;

@@ -12,6 +12,14 @@ services:
         value: 0.0.0.0
       - key: DASHBOARD_CONTA
         value: act_1236245618438183
+      - key: DASHBOARD_RESULTADO
+        value: onsite_conversion.messaging_conversation_started_7d
+      - key: DASHBOARD_RESULTADO_NOME
+        value: Conversas iniciadas
+      - key: DASHBOARD_SECUNDARIO
+        value: lead
+      - key: DASHBOARD_SECUNDARIO_NOME
+        value: Leads
       # Preenchidos no painel do Render (nunca no repositório):
       - key: DASHBOARD_SENHA
         sync: false
