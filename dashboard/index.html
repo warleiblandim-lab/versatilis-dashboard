@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Versatilis Meta Ads</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --series-1-wash: rgba(42,120,214,0.10);
+  --good-text: #006300;
+  --bad-text: #b42f2f;
+  --status-good: #0ca30c;
+  --status-critical: #d03b3b;
+  --hover: rgba(11,11,11,0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-1-wash: rgba(57,135,229,0.14);
+    --good-text: #0ca30c;
+    --bad-text: #e66767;
+    --hover: rgba(255,255,255,0.05);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --series-1-wash: rgba(57,135,229,0.14);
+  --good-text: #0ca30c;
+  --bad-text: #e66767;
+  --hover: rgba(255,255,255,0.05);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.sub { color: var(--ink-2); margin-top: 2px; }
+.live { display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: 13px; flex-wrap: wrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--status-good); box-shadow: 0 0 0 0 rgba(12,163,12,.5); animation: pulse 2s infinite; }
+.dot.off { background: var(--status-critical); animation: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(12,163,12,.45); } 70% { box-shadow: 0 0 0 7px rgba(12,163,12,0); } 100% { box-shadow: 0 0 0 0 rgba(12,163,12,0); } }
+button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover { background: var(--hover); }
+button:focus-visible, .hit:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.filtros button[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); font-weight: 600; }
+.erro { display: none; background: var(--surface); border: 1px solid var(--status-critical); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
+.erro.on { display: block; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.topo { display: grid; grid-template-columns: minmax(240px, 1fr) 3fr; gap: 12px; margin-bottom: 12px; }
+.hero .label { color: var(--ink-2); }
+.hero .valor { font-size: 48px; font-weight: 600; line-height: 1.1; margin: 8px 0 6px; letter-spacing: -0.01em; }
+.hero .extra { color: var(--ink-2); margin-top: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .valor { font-size: 24px; font-weight: 600; margin: 4px 0 2px; }
+.delta { font-size: 12px; color: var(--muted); }
+.delta.bom { color: var(--good-text); }
+.delta.ruim { color: var(--bad-text); }
+.graficos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+.card .nota { color: var(--muted); font-size: 12px; margin: 2px 0 10px; }
+.chart { position: relative; width: 100%; min-height: 240px; }
+.chart svg { display: block; overflow: visible; }
+.grid { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+.base { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+.tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.val { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
+.bar { fill: var(--series-1); }
+.bar.dim { opacity: .45; }
+.hit { fill: transparent; cursor: default; }
+.hit:hover, .hit.ativo { fill: var(--hover); }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); white-space: nowrap; opacity: 0; transition: opacity .1s; z-index: 2; }
+.tip.on { opacity: 1; }
+.tip .t { color: var(--ink-2); margin-bottom: 2px; }
+.tip .v { font-weight: 600; font-size: 13px; }
+.tip .k { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--series-1); margin-right: 6px; }
+details { margin-top: 8px; }
+summary { color: var(--ink-2); font-size: 12px; cursor: pointer; }
+.tabela-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 220px; }
+tbody tr:hover { background: var(--hover); }
+.status { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 12px; }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status.ativa i { background: var(--status-good); }
+.nome { color: var(--ink); }
+.mini { height: 6px; border-radius: 3px; background: var(--series-1-wash); margin-top: 6px; overflow: hidden; }
+.mini b { display: block; height: 100%; background: var(--series-1); border-radius: 3px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 16px; }
+.carregando { opacity: .55; transition: opacity .2s; }
+@media (max-width: 900px) {
+  .topo { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .graficos { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="titulo">Versatilis · Meta Ads</h1>
+      <div class="sub" id="subtitulo">Carregando…</div>
+    </div>
+    <div class="live">
+      <span class="dot" id="dot"></span>
+      <span id="status">Conectando…</span>
+      <button id="atualizar" type="button">Atualizar agora</button>
+      <button id="tema" type="button" aria-label="Alternar tema claro/escuro">◐</button>
+    </div>
+  </header>
+
+  <div class="filtros" role="group" aria-label="Período">
+    <button type="button" data-p="hoje">Hoje</button>
+    <button type="button" data-p="ontem">Ontem</button>
+    <button type="button" data-p="7d">7 dias</button>
+    <button type="button" data-p="14d">14 dias</button>
+    <button type="button" data-p="30d">30 dias</button>
+    <button type="button" data-p="mes">Este mês</button>
+  </div>
+
+  <div class="erro" id="erro" role="alert"></div>
+
+  <main id="conteudo">
+    <section class="topo">
+      <div class="card hero">
+        <div class="label">Investimento no período</div>
+        <div class="valor" id="hero-valor">—</div>
+        <div id="hero-delta" class="delta"></div>
+        <div class="extra" id="hero-extra"></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section class="graficos">
+      <div class="card">
+        <h2 id="g1-titulo">Investimento por dia</h2>
+        <div class="nota">R$ gastos</div>
+        <div class="chart" id="g1"></div>
+        <details><summary>Ver como tabela</summary><div class="tabela-wrap" id="g1-tabela"></div></details>
+      </div>
+      <div class="card">
+        <h2 id="g2-titulo">Conversas iniciadas por dia</h2>
+        <div class="nota">Conversas no WhatsApp/Direct iniciadas pelos anúncios</div>
+        <div class="chart" id="g2"></div>
+        <details><summary>Ver como tabela</summary><div class="tabela-wrap" id="g2-tabela"></div></details>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Campanhas</h2>
+      <div class="nota">Ordenadas por investimento no período. Campanhas ativas sem veiculação também aparecem.</div>
+      <div class="tabela-wrap" id="campanhas"></div>
+    </section>
+  </main>
+
+  <footer id="rodape"></footer>
+</div>
+
+<script>
+const INTERVALO_S = 60;
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const brlCurto = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 });
+const num = new Intl.NumberFormat("pt-BR");
+const numCurto = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
+const pct = v => (v == null ? "—" : v.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + "%");
+const moeda = v => (v == null ? "—" : brl.format(v));
+const inteiro = v => (v == null ? "—" : num.format(Math.round(v)));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const dataBR = iso => iso.split("-").reverse().join("/");
+
+function lerPref(chave, padrao) { try { return localStorage.getItem(chave) || padrao; } catch { return padrao; } }
+function gravarPref(chave, valor) { try { localStorage.setItem(chave, valor); } catch {} }
+
+let periodo = lerPref("periodo", "7d");
+let ultimo = null;
+let restante = INTERVALO_S;
+
+// ---------- Tema ----------
+const temaSalvo = lerPref("tema", "");
+if (temaSalvo) document.documentElement.dataset.theme = temaSalvo;
+document.getElementById("tema").onclick = () => {
+  const escuro = document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  const novo = escuro ? "light" : "dark";
+  document.documentElement.dataset.theme = novo;
+  gravarPref("tema", novo);
+};
+
+// ---------- KPIs ----------
+// bom: 1 = subir é bom, -1 = cair é bom, 0 = neutro
+const KPIS = [
+  { k: "conversas", label: "Conversas iniciadas", fmt: inteiro, bom: 1 },
+  { k: "custo_conversa", label: "Custo por conversa", fmt: moeda, bom: -1 },
+  { k: "leads", label: "Leads", fmt: inteiro, bom: 1 },
+  { k: "alcance", label: "Alcance", fmt: v => (v == null ? "—" : numCurto.format(v)), bom: 1 },
+  { k: "impressoes", label: "Impressões", fmt: v => numCurto.format(v), bom: 0 },
+  { k: "cliques", label: "Cliques no link", fmt: inteiro, bom: 1 },
+  { k: "ctr", label: "CTR (link)", fmt: pct, bom: 1 },
+  { k: "cpm", label: "CPM", fmt: moeda, bom: -1 },
+];
+
+function delta(atual, anterior, bom, comparacao) {
+  if (atual == null || anterior == null || anterior === 0) return { txt: `sem base vs ${comparacao}`, cls: "" };
+  const d = (atual - anterior) / anterior * 100;
+  if (Math.abs(d) < 0.5) return { txt: `= estável vs ${comparacao}`, cls: "" };
+  const seta = d > 0 ? "▲" : "▼";
+  const cls = bom === 0 ? "" : (d > 0) === (bom > 0) ? "bom" : "ruim";
+  const v = Math.abs(d).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  return { txt: `${seta} ${v}% vs ${comparacao}`, cls };
+}
+
+function renderKpis(d) {
+  const t = d.totais, a = d.anteriores, cmp = d.periodo.comparacao;
+  document.getElementById("hero-valor").textContent = brl.format(t.gasto);
+  const hd = delta(t.gasto, a.gasto, 0, cmp);
+  const heroDelta = document.getElementById("hero-delta");
+  heroDelta.textContent = hd.txt; heroDelta.className = "delta";
+  document.getElementById("hero-extra").textContent =
+    `${inteiro(t.conversas)} conversas · ${moeda(t.custo_conversa)} por conversa`;
+  document.getElementById("tiles").innerHTML = KPIS.map(kpi => {
+    const dl = delta(t[kpi.k], a[kpi.k], kpi.bom, cmp);
+    return `<div class="card tile"><div class="label">${kpi.label}</div>
+      <div class="valor">${kpi.fmt(t[kpi.k])}</div>
+      <div class="delta ${dl.cls}">${dl.txt}</div></div>`;
+  }).join("");
+}
+
+// ---------- Gráfico de colunas (SVG) ----------
+function passoBonito(max, n = 4) {
+  if (max <= 0) return 1;
+  const bruto = max / n, p = Math.pow(10, Math.floor(Math.log10(bruto))), m = bruto / p;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+}
+
+function colunaPath(x, y, w, h) {
+  if (h <= 0) return "";
+  const r = Math.min(4, h, w / 2);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+
+function colunas(el, pontos, campo, fmt, fmtEixo, titulo) {
+  const W = Math.max(280, el.clientWidth), H = 240;
+  const m = { t: 22, r: 4, b: 26, l: 52 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const valores = pontos.map(p => p[campo] || 0);
+  const max = Math.max(0, ...valores);
+  const passo = passoBonito(max);
+  const topo = Math.max(passo, Math.ceil(max / passo) * passo);
+  const banda = iw / pontos.length;
+  const bw = Math.max(2, Math.min(24, banda * 0.62));
+  const y = v => m.t + ih - (v / topo) * ih;
+  const cadaN = Math.max(1, Math.ceil(pontos.length / Math.max(1, Math.floor(iw / 46))));
+  const iMax = valores.indexOf(max);
+
+  let s = `<svg width="${W}" height="${H}" role="img" aria-label="${esc(titulo)}">`;
+  for (let v = 0; v <= topo + 1e-9; v += passo) {
+    const yy = Math.round(y(v)) + 0.5;
+    if (v > 0) s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}"/>`;
+    s += `<text class="tick" x="${m.l - 8}" y="${yy}" text-anchor="end" dominant-baseline="middle">${fmtEixo(v)}</text>`;
+  }
+  pontos.forEach((p, i) => {
+    const cx = m.l + banda * i + banda / 2;
+    s += `<rect class="hit" data-i="${i}" tabindex="0" x="${m.l + banda * i}" y="${m.t}" width="${banda}" height="${ih}" aria-label="${esc(p.dica)}: ${esc(fmt(valores[i]))}"/>`;
+    const h = (valores[i] / topo) * ih;
+    s += `<path class="bar" data-i="${i}" d="${colunaPath(cx - bw / 2, m.t + ih - h, bw, h)}" pointer-events="none"/>`;
+    if (i % cadaN === 0 || i === pontos.length - 1 && pontos.length <= 12)
+      s += `<text class="tick" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(p.rotulo)}</text>`;
+  });
+  if (max > 0) {
+    const cx = m.l + banda * iMax + banda / 2;
+    s += `<text class="val" x="${cx}" y="${y(max) - 6}" text-anchor="middle">${esc(fmt(max))}</text>`;
+  }
+  s += `<line class="base" x1="${m.l}" x2="${W - m.r}" y1="${Math.round(m.t + ih) + 0.5}" y2="${Math.round(m.t + ih) + 0.5}"/></svg>`;
+  s += `<div class="tip" role="status"></div>`;
+  el.innerHTML = s;
+
+  const tip = el.querySelector(".tip");
+  const mostrar = alvo => {
+    const i = +alvo.dataset.i, p = pontos[i];
+    el.querySelectorAll(".hit").forEach(h => h.classList.toggle("ativo", h === alvo));
+    tip.innerHTML = `<div class="t">${esc(p.dica)}</div><div class="v"><span class="k"></span>${esc(fmt(valores[i]))}</div>`;
+    tip.classList.add("on");
+    const cx = m.l + banda * i + banda / 2;
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.min(Math.max(0, cx - tw / 2), W - tw) + "px";
+    tip.style.top = Math.max(0, y(valores[i]) - tip.offsetHeight - 10) + "px";
+  };
+  const esconder = () => { tip.classList.remove("on"); el.querySelectorAll(".hit.ativo").forEach(h => h.classList.remove("ativo")); };
+  el.querySelectorAll(".hit").forEach(h => {
+    h.addEventListener("pointerenter", () => mostrar(h));
+    h.addEventListener("focus", () => mostrar(h));
+    h.addEventListener("blur", esconder);
+  });
+  el.querySelector("svg").addEventListener("pointerleave", esconder);
+}
+
+function tabelaSerie(pontos, campo, fmt, cab) {
+  return `<table><thead><tr><th>${cab}</th><th>Valor</th></tr></thead><tbody>${
+    pontos.map(p => `<tr><td>${esc(p.dica)}</td><td>${esc(fmt(p[campo] || 0))}</td></tr>`).join("")
+  }</tbody></table>`;
+}
+
+function renderGraficos(d) {
+  const porHora = d.periodo.granularidade === "hora";
+  const unidade = porHora ? "hora" : "dia";
+  document.getElementById("g1-titulo").textContent = `Investimento por ${unidade}`;
+  document.getElementById("g2-titulo").textContent = `Conversas iniciadas por ${unidade}`;
+  const eixoMoeda = v => (v >= 1000 ? brlCurto.format(v) : "R$ " + num.format(v));
+  colunas(document.getElementById("g1"), d.serie, "gasto", moeda, eixoMoeda, `Investimento por ${unidade}`);
+  colunas(document.getElementById("g2"), d.serie, "conversas", inteiro, v => num.format(v), `Conversas por ${unidade}`);
+  const cab = porHora ? "Hora" : "Dia";
+  document.getElementById("g1-tabela").innerHTML = tabelaSerie(d.serie, "gasto", moeda, cab);
+  document.getElementById("g2-tabela").innerHTML = tabelaSerie(d.serie, "conversas", inteiro, cab);
+}
+
+// ---------- Tabela de campanhas ----------
+const STATUS = { ACTIVE: "Ativa", PAUSED: "Pausada", CAMPAIGN_PAUSED: "Pausada", ARCHIVED: "Arquivada", DELETED: "Excluída", WITH_ISSUES: "Com problemas", IN_PROCESS: "Em processamento" };
+
+function renderCampanhas(d) {
+  const lista = d.campanhas;
+  if (!lista.length) {
+    document.getElementById("campanhas").innerHTML = `<p class="nota">Nenhuma campanha com veiculação neste período.</p>`;
+    return;
+  }
+  const maxGasto = Math.max(...lista.map(c => c.gasto), 0.01);
+  const linhas = lista.map(c => `<tr>
+      <td><div class="nome">${esc(c.nome)}</div>
+        <span class="status ${c.status === "ACTIVE" ? "ativa" : ""}"><i></i>${esc(STATUS[c.status] || c.status)}</span></td>
+      <td>${moeda(c.gasto)}<div class="mini" aria-hidden="true"><b style="width:${(c.gasto / maxGasto * 100).toFixed(1)}%"></b></div></td>
+      <td>${inteiro(c.conversas)}</td>
+      <td>${moeda(c.custo_conversa)}</td>
+      <td>${inteiro(c.leads)}</td>
+      <td>${inteiro(c.impressoes)}</td>
+      <td>${inteiro(c.cliques)}</td>
+      <td>${pct(c.ctr)}</td>
+      <td>${moeda(c.cpc)}</td>
+    </tr>`).join("");
+  document.getElementById("campanhas").innerHTML = `<table>
+    <thead><tr><th>Campanha</th><th>Investimento</th><th>Conversas</th><th>Custo/conversa</th><th>Leads</th>
+    <th>Impressões</th><th>Cliques</th><th>CTR</th><th>CPC</th></tr></thead>
+    <tbody>${linhas}</tbody></table>`;
+}
+
+// ---------- Ciclo de atualização ----------
+function render(d) {
+  ultimo = d;
+  document.getElementById("titulo").textContent = `${d.conta.nome || "Conta"} · Meta Ads`;
+  const p = d.periodo;
+  const faixa = p.inicio === p.fim ? dataBR(p.inicio) : `${dataBR(p.inicio)} a ${dataBR(p.fim)}`;
+  document.getElementById("subtitulo").textContent = `${d.conta.id} · ${faixa}`;
+  renderKpis(d);
+  renderGraficos(d);
+  renderCampanhas(d);
+  const ant = p.anterior_inicio === p.anterior_fim ? dataBR(p.anterior_inicio) : `${dataBR(p.anterior_inicio)} a ${dataBR(p.anterior_fim)}`;
+  document.getElementById("rodape").textContent =
+    `Comparação com ${p.comparacao} (${ant}). Os períodos incluem o dia de hoje, ainda parcial. ` +
+    `A Meta costuma consolidar os números com 15 a 30 minutos de atraso, e eles podem ser ajustados nas horas seguintes.`;
+}
+
+async function carregar(forcar = false) {
+  const main = document.getElementById("conteudo");
+  main.classList.add("carregando");
+  try {
+    const r = await fetch(`/api/dados?periodo=${periodo}${forcar ? "&forcar=1" : ""}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || `HTTP ${r.status}`);
+    render(d);
+    document.getElementById("erro").classList.remove("on");
+    document.getElementById("dot").classList.remove("off");
+    const hora = new Date(d.atualizado_em).toLocaleTimeString("pt-BR");
+    document.getElementById("status").dataset.hora = hora;
+  } catch (e) {
+    const box = document.getElementById("erro");
+    const msg = /fetch/i.test(e.message) ? "O servidor do dashboard não está respondendo. Ele foi fechado?" : e.message;
+    box.innerHTML = `<strong>Não foi possível atualizar.</strong> ${esc(msg)}` +
+      (ultimo ? " Mostrando os últimos dados carregados." : "");
+    box.classList.add("on");
+    document.getElementById("dot").classList.add("off");
+  } finally {
+    main.classList.remove("carregando");
+    restante = INTERVALO_S;
+    tick();
+  }
+}
+
+function tick() {
+  const st = document.getElementById("status");
+  const hora = st.dataset.hora;
+  st.textContent = hora ? `Atualizado às ${hora} · próxima em ${restante}s` : "Conectando…";
+}
+
+setInterval(() => {
+  if (document.hidden) return;
+  restante -= 1;
+  if (restante <= 0) carregar();
+  else tick();
+}, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && restante <= 0) carregar(); });
+
+document.querySelectorAll(".filtros button").forEach(b => {
+  b.setAttribute("aria-pressed", b.dataset.p === periodo);
+  b.onclick = () => {
+    periodo = b.dataset.p;
+    gravarPref("periodo", periodo);
+    document.querySelectorAll(".filtros button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    carregar();
+  };
+});
+document.getElementById("atualizar").onclick = () => carregar(true);
+
+let redim;
+new ResizeObserver(() => { clearTimeout(redim); redim = setTimeout(() => ultimo && renderGraficos(ultimo), 120); })
+  .observe(document.getElementById("g1"));
+
+carregar();
+</script>
+</body>
+</html>

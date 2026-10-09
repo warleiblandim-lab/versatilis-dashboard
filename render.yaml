@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: versatilis-dashboard
+    runtime: python
+    plan: free
+    region: virginia
+    buildCommand: pip install -r requirements.txt
+    startCommand: python dashboard/servidor.py
+    healthCheckPath: /saude
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: DASHBOARD_CONTA
+        value: act_1236245618438183
+      # Preenchidos no painel do Render (nunca no repositório):
+      - key: DASHBOARD_SENHA
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
